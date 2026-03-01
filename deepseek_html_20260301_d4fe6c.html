@@ -380,7 +380,20 @@
         .toolbar-right {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .scroll-jump-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .scroll-jump-btn {
+            padding: 5px 12px;
+            font-size: 12px;
+            line-height: 1;
         }
 
         /* ========== 聊天窗口容器 ========== */
@@ -609,6 +622,25 @@
             flex-direction: column;
             gap: 10px;
             min-height: 0;
+            scrollbar-gutter: stable;
+            scrollbar-width: auto;
+        }
+        .chat-messages::-webkit-scrollbar {
+            width: 10px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: color-mix(in srgb, var(--card-border) 35%, transparent);
+            border-radius: 999px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: color-mix(in srgb, var(--primary-color) 42%, var(--card-border));
+            border-radius: 999px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: color-mix(in srgb, var(--primary-color) 68%, var(--card-border));
+            background-clip: padding-box;
         }
 
         /* ========== 消息样式 ========== */
@@ -918,11 +950,11 @@
         .win-count-ctrl {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 8px;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 8px;
-            padding: 3px 5px;
+            padding: 4px 8px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .win-count-btn {
@@ -943,7 +975,14 @@
         .win-count-label {
             font-size: 12px; font-weight: 600; color: var(--text-primary);
             min-width: 40px; text-align: center;
-            padding: 0 4px;
+            padding: 0 8px;
+        }
+
+        #display-config {
+            gap: 16px;
+        }
+        #display-config .form-group {
+            gap: 8px;
         }
 
         /* ========== 请求状态 ========== */
@@ -1889,6 +1928,10 @@
                 <span class="toolbar-title"><span class="toolbar-brand-dot"></span>Qyu 多模型对比助手</span>
             </div>
             <div class="toolbar-right">
+                <div class="scroll-jump-group" title="一键同步滚动全部窗口">
+                    <button class="btn btn-secondary scroll-jump-btn" id="jumpAllTopBtn">回到顶部</button>
+                    <button class="btn btn-secondary scroll-jump-btn" id="jumpAllBottomBtn">到底部</button>
+                </div>
                 <button class="btn btn-secondary" id="checkConnectionBtn" title="检测所有窗口连接状态" style="font-size:12px;padding:5px 12px;">
                     <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style="flex-shrink:0;">
                         <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.5"/>
@@ -6158,6 +6201,18 @@
                 });
             }
 
+            function jumpAllWindowsTo(edge) {
+                const chatMessages = document.querySelectorAll('.chat-messages');
+                chatMessages.forEach(msgContainer => {
+                    msgContainer.scrollTop = edge === 'top' ? 0 : msgContainer.scrollHeight;
+                });
+                syncIndicator.classList.add('show');
+                clearTimeout(syncScrollTimeout);
+                syncScrollTimeout = setTimeout(() => {
+                    syncIndicator.classList.remove('show');
+                }, 600);
+            }
+
             function enableSyncScroll() {
                 // 1. 顶部控制区域的滚轮事件
                 if (syncScrollCtrl) {
@@ -6200,6 +6255,11 @@
 
             // 初始化同步滚动
             enableSyncScroll();
+
+            const jumpAllTopBtn = document.getElementById('jumpAllTopBtn');
+            const jumpAllBottomBtn = document.getElementById('jumpAllBottomBtn');
+            if (jumpAllTopBtn) jumpAllTopBtn.addEventListener('click', () => jumpAllWindowsTo('top'));
+            if (jumpAllBottomBtn) jumpAllBottomBtn.addEventListener('click', () => jumpAllWindowsTo('bottom'));
 
             // 监听窗口变化重新绑定
             const originalRenderChatWindows = renderChatWindows;
